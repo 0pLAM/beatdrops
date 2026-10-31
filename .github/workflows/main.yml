@@ -1,0 +1,26 @@
+name: Build BeatDrop (Windows VST3)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          $src = (Get-ChildItem -Recurse -Filter CMakeLists.txt | Where-Object { Test-Path (Join-Path $_.DirectoryName "Source\PluginProcessor.cpp") } | Select-Object -First 1).DirectoryName
+          Write-Host "Projekt gefunden in: $src"
+          cmake -S $src -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --target BeatDrop_VST3 --parallel
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: BeatDrop-VST3-Windows
+          path: build/BeatDrop_artefacts/Release/VST3/BeatDrop.vst3
